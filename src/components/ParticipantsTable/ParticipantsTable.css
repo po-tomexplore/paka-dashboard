@@ -1,0 +1,143 @@
+.loading {
+  text-align: center;
+  padding: 4rem;
+}
+
+.spinner {
+  width: 50px;
+  height: 50px;
+  border: 4px solid rgba(255, 255, 255, 0.1);
+  border-left-color: #48dbfb;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+  margin: 0 auto 1rem;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.table-container {
+  background: rgba(255, 255, 255, 0.05);
+  backdrop-filter: blur(10px);
+  border-radius: 16px;
+  overflow: hidden;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+}
+
+.participants-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.participants-table th {
+  background: rgba(102, 126, 234, 0.3);
+  padding: 1rem 1.5rem;
+  text-align: left;
+  font-weight: 600;
+  text-transform: uppercase;
+  font-size: 0.85rem;
+  letter-spacing: 0.5px;
+  cursor: default;
+}
+
+.participants-table th.sortable {
+  cursor: pointer;
+  user-select: none;
+  transition: background 0.2s;
+}
+.participants-table th.sortable:hover {
+  background: rgba(102, 126, 234, 0.5);
+}
+
+.participants-table td {
+  padding: 1rem 1.5rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.participants-table tbody tr {
+  transition: all 0.2s ease;
+}
+
+.participants-table tbody tr:hover {
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.barcode {
+  font-family: 'Courier New', monospace;
+  background: rgba(0, 0, 0, 0.2);
+  padding: 0.25rem 0.5rem;
+  border-radius: 4px;
+  font-size: 0.9rem;
+}
+
+.status-badge {
+  display: inline-block;
+  padding: 0.35rem 0.75rem;
+  border-radius: 20px;
+  font-size: 0.8rem;
+  font-weight: 500;
+}
+
+.status-scanned {
+  background: rgba(46, 213, 115, 0.2);
+  color: #2ed573;
+}
+
+.status-not-scanned {
+  background: rgba(255, 165, 2, 0.2);
+  color: #ffa502;
+}
+
+.status-unknown {
+  background: rgba(136, 136, 136, 0.2);
+  color: #888;
+}
+
+.status-paid {
+  background: rgba(46, 213, 115, 0.2);
+  color: #2ed573;
+}
+
+.status-unpaid {
+  background: rgba(255, 107, 107, 0.2);
+  color: #ff6b6b;
+}
+
+.age-badge {
+  display: inline-block;
+  padding: 0.25rem 0.5rem;
+  border-radius: 12px;
+  font-size: 0.8rem;
+  font-weight: 500;
+}
+
+.age-minor {
+  background: rgba(255, 165, 2, 0.2);
+  color: #ffa502;
+}
+
+.age-adult {
+  background: rgba(46, 213, 115, 0.2);
+  color: #2ed573;
+}
+
+.postal-badge {
+  display: inline-block;
+  padding: 0.25rem 0.5rem;
+  border-radius: 8px;
+  font-size: 0.8rem;
+  font-weight: 500;
+  background: rgba(102, 126, 234, 0.2);
+  color: #667eea;
+  font-family: 'Courier New', monospace;
+}
+
+.no-data {
+  text-align: center;
+  padding: 3rem !important;
+  color: #888;
+  font-style: italic;
+}

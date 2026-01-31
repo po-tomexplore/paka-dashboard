@@ -1,28 +1,24 @@
 import { useState, useEffect, useMemo } from 'react'
 import type { Participant } from '../types'
 import { AGE_RANGES } from '../constants'
-import { authenticate, fetchParticipants } from '../services/api'
+import { fetchParticipantsFromFirestore } from '../services/firebase'
 import { getBirthDate, getPostalCode, calculateAge } from '../utils/helpers'
 
 export const useParticipants = () => {
-  const [accessToken, setAccessToken] = useState<string | null>(null)
   const [participants, setParticipants] = useState<Participant[]>([])
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [lastSyncedAt, setLastSyncedAt] = useState<string | null>(null)
 
-  // Charger les données
+  // Charger les données depuis Firestore
   const loadData = async () => {
     setLoading(true)
     setError(null)
     
     try {
-      const token = await authenticate()
-      setAccessToken(token)
-      
-      if (token) {
-        const data = await fetchParticipants(token)
-        setParticipants(data.participants || [])
-      }
+      const data = await fetchParticipantsFromFirestore()
+      setParticipants(data.participants || [])
+      setLastSyncedAt(data.syncedAt)
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Erreur inconnue')
     } finally {
@@ -30,22 +26,15 @@ export const useParticipants = () => {
     }
   }
 
-  // Rafraîchir les données
+  // Rafraîchir les données depuis Firestore
   const refresh = async () => {
     setLoading(true)
     setError(null)
     
     try {
-      let token = accessToken
-      if (!token) {
-        token = await authenticate()
-        setAccessToken(token)
-      }
-      
-      if (token) {
-        const data = await fetchParticipants(token)
-        setParticipants(data.participants || [])
-      }
+      const data = await fetchParticipantsFromFirestore()
+      setParticipants(data.participants || [])
+      setLastSyncedAt(data.syncedAt)
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Erreur inconnue')
     } finally {
@@ -122,5 +111,6 @@ export const useParticipants = () => {
     statsByDepartment,
     statsByAge,
     counts,
+    lastSyncedAt,
   }
 }

@@ -1,0 +1,8 @@
+API Brevo 
+Automatiquement dès achat => Newsletter Brevo
+
+Statistiques graph => Possibilité d'ajouter des events 
+
+Intégration GTM 
+
+Boites mail et formulaires 

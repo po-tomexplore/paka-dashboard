@@ -6,7 +6,7 @@ import {
   Controls,
   Filters,
   StatsCards,
-  StatsDetails,
+  StatsSection,
   ParticipantsTable,
   Footer,
   ErrorMessage,
@@ -26,6 +26,7 @@ function App() {
     statsByDepartment,
     statsByAge,
     counts,
+    lastSyncedAt,
   } = useParticipants()
 
   const {
@@ -54,6 +55,7 @@ function App() {
         onSearchChange={setSearchTerm}
         onRefresh={refresh}
         loading={loading}
+        lastSyncedAt={lastSyncedAt}
       />
 
       <Filters
@@ -74,10 +76,11 @@ function App() {
         filtered={filteredParticipants.length}
       />
 
-      <StatsDetails
+      <StatsSection
         statsByDepartment={statsByDepartment}
         statsByAge={statsByAge}
         participantsWithBirthDate={counts.withBirthDate}
+        participants={participants}
       />
 
       <ParticipantsTable

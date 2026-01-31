@@ -1,0 +1,10 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Weezevent snapshots - lecture publique, écriture uniquement par les functions
+    match /weezevent_snapshots/{document=**} {
+      allow read: if true;
+      allow write: if false; // Seules les Cloud Functions peuvent écrire
+    }
+  }
+}

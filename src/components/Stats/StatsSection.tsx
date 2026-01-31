@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { StatsDetails } from './StatsDetails'
 import { FranceMap } from '../Map'
+import { ParticipantGraph } from '../Graph'
 import type { Participant } from '../../types'
 import './StatsSection.css'
 
@@ -11,7 +12,7 @@ interface StatsSectionProps {
   participants: Participant[]
 }
 
-type TabType = 'stats' | 'map'
+type TabType = 'stats' | 'map' | 'graph'
 
 export const StatsSection = ({
   statsByDepartment,
@@ -36,17 +37,27 @@ export const StatsSection = ({
         >
           🗺️ Carte
         </button>
+        <button
+          className={`stats-tab ${activeTab === 'graph' ? 'active' : ''}`}
+          onClick={() => setActiveTab('graph')}
+        >
+          📈 Graphiques
+        </button>
       </div>
 
       <div className="stats-content">
-        {activeTab === 'stats' ? (
+        {activeTab === 'stats' && (
           <StatsDetails
             statsByDepartment={statsByDepartment}
             statsByAge={statsByAge}
             participantsWithBirthDate={participantsWithBirthDate}
           />
-        ) : (
+        )}
+        {activeTab === 'map' && (
           <FranceMap participants={participants} />
+        )}
+        {activeTab === 'graph' && (
+          <ParticipantGraph participants={participants} />
         )}
       </div>
     </div>

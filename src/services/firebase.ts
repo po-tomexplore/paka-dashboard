@@ -44,8 +44,8 @@ export const fetchParticipantsFromFirestore = async (): Promise<ParticipantRespo
   }
 }
 
-// URL de la Cloud Function pour le sync manuel
-const MANUAL_SYNC_URL = 'https://europe-west1-portfolio-d0bfe.cloudfunctions.net/manualWeezeventSync'
+// URL de la Cloud Function pour le sync manuel (2nd Gen)
+const MANUAL_SYNC_URL = 'https://manualweezeventsync-ix53plx36q-ew.a.run.app'
 
 export const triggerManualSnapshot = async (): Promise<{ success: boolean; count: number }> => {
   const response = await fetch(MANUAL_SYNC_URL, {

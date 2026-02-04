@@ -135,10 +135,11 @@ export const ParticipantGraph = ({ participants }: ParticipantGraphProps) => {
     })
   }, [filteredParticipants])
 
-  // Données pour le graphique par âge
+  // Données pour le graphique par âge (exclure "Tous" qui est uniquement un filtre)
   const ageData = useMemo(() => {
+    const ageRangesForGraph = AGE_RANGES.filter(r => r.label !== 'Tous')
     const byAge: Record<string, number> = {}
-    AGE_RANGES.forEach(range => {
+    ageRangesForGraph.forEach(range => {
       byAge[range.label] = 0
     })
 
@@ -147,14 +148,14 @@ export const ParticipantGraph = ({ participants }: ParticipantGraphProps) => {
       if (birthDate) {
         const age = calculateAge(birthDate)
         if (age === null) return
-        const range = AGE_RANGES.find(r => age >= r.min && age <= r.max)
+        const range = ageRangesForGraph.find(r => age >= r.min && age <= r.max)
         if (range) {
           byAge[range.label]++
         }
       }
     })
 
-    return AGE_RANGES.map(range => ({
+    return ageRangesForGraph.map(range => ({
       name: range.label,
       value: byAge[range.label]
     }))
@@ -463,31 +464,63 @@ export const ParticipantGraph = ({ participants }: ParticipantGraphProps) => {
         )}
 
         {chartType === 'department' && (
-          <ResponsiveContainer width="100%" height={400}>
-            <BarChart data={departmentData}>
-              <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.1)" />
-              <XAxis 
-                dataKey="name" 
-                stroke="#888" 
-                tick={{ fill: '#888' }}
-              />
-              <YAxis stroke="#888" tick={{ fill: '#888' }} />
-              <Tooltip
-                contentStyle={{
-                  backgroundColor: 'rgba(30, 30, 50, 0.95)',
-                  border: '1px solid rgba(255,255,255,0.1)',
-                  borderRadius: '8px',
-                  color: '#fff'
-                }}
-                formatter={(value) => [`${value} participants`, 'Total']}
-              />
-              <Bar dataKey="value" name="Participants" radius={[4, 4, 0, 0]}>
-                {departmentData.map((_, index) => (
-                  <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                ))}
-              </Bar>
-            </BarChart>
-          </ResponsiveContainer>
+          <div className="dual-chart">
+            <ResponsiveContainer width="50%" height={400}>
+              <BarChart data={departmentData} layout="vertical">
+                <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.1)" />
+                <XAxis type="number" stroke="#888" tick={{ fill: '#888' }} />
+                <YAxis 
+                  type="category" 
+                  dataKey="name" 
+                  stroke="#888" 
+                  tick={{ fill: '#888' }}
+                  width={50}
+                />
+                <Tooltip
+                  contentStyle={{
+                    backgroundColor: 'rgba(30, 30, 50, 0.95)',
+                    border: '1px solid rgba(255,255,255,0.1)',
+                    borderRadius: '8px',
+                    color: '#fff'
+                  }}
+                  formatter={(value) => [`${value} participants`, 'Total']}
+                />
+                <Bar dataKey="value" name="Participants" radius={[0, 4, 4, 0]}>
+                  {departmentData.map((_, index) => (
+                    <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                  ))}
+                </Bar>
+              </BarChart>
+            </ResponsiveContainer>
+            <ResponsiveContainer width="50%" height={400}>
+              <PieChart>
+                <Pie
+                  data={departmentData.filter(d => d.value > 0)}
+                  cx="50%"
+                  cy="50%"
+                  innerRadius={60}
+                  outerRadius={120}
+                  paddingAngle={2}
+                  dataKey="value"
+                  label={({ name, percent }) => `${name} (${((percent ?? 0) * 100).toFixed(0)}%)`}
+                  labelLine={{ stroke: '#888' }}
+                >
+                  {departmentData.map((_, index) => (
+                    <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                  ))}
+                </Pie>
+                <Tooltip
+                  contentStyle={{
+                    backgroundColor: 'rgba(30, 30, 50, 0.95)',
+                    border: '1px solid rgba(255,255,255,0.1)',
+                    borderRadius: '8px',
+                    color: '#fff'
+                  }}
+                  formatter={(value) => [`${value} participants`, 'Total']}
+                />
+              </PieChart>
+            </ResponsiveContainer>
+          </div>
         )}
       </div>
     </div>

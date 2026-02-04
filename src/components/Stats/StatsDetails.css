@@ -74,3 +74,41 @@
   color: #888;
   text-align: center;
 }
+
+/* Responsive */
+@media (max-width: 768px) {
+  .stats-details {
+    grid-template-columns: 1fr;
+  }
+
+  .stat-bar-item {
+    grid-template-columns: 70px 1fr 45px;
+    gap: 0.5rem;
+  }
+
+  .stat-bar-label {
+    font-size: 0.8rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .stats-section {
+    padding: 1rem;
+  }
+
+  .stats-section h3 {
+    font-size: 1rem;
+  }
+
+  .stat-bar-item {
+    grid-template-columns: 60px 1fr 40px;
+  }
+
+  .stat-bar-label {
+    font-size: 0.75rem;
+  }
+
+  .stat-bar-count {
+    font-size: 0.8rem;
+  }
+}

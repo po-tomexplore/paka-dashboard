@@ -218,3 +218,40 @@
 .leaflet-popup-tip {
   box-shadow: none;
 }
+
+/* Responsive */
+@media (max-width: 768px) {
+  .france-map-container {
+    height: 400px;
+  }
+
+  .map-legend {
+    bottom: 0.5rem;
+    right: 0.5rem;
+    padding: 0.75rem 1rem;
+    min-width: 140px;
+    font-size: 0.75rem;
+  }
+
+  .map-legend h4 {
+    font-size: 0.8rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .france-map-container {
+    height: 350px;
+    border-radius: 12px;
+  }
+
+  .map-legend {
+    padding: 0.5rem 0.75rem;
+    min-width: 120px;
+    font-size: 0.7rem;
+  }
+
+  .legend-dot {
+    width: 10px;
+    height: 10px;
+  }
+}

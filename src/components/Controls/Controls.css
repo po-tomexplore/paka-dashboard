@@ -94,3 +94,38 @@
   opacity: 0.6;
   cursor: not-allowed;
 }
+
+/* Responsive */
+@media (max-width: 768px) {
+  .controls {
+    flex-direction: column;
+  }
+
+  .controls-right {
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+
+  .sync-info {
+    order: 3;
+    width: 100%;
+    text-align: center;
+  }
+}
+
+@media (max-width: 480px) {
+  .search-box input {
+    padding: 0.75rem 1rem;
+    font-size: 0.9rem;
+  }
+
+  .refresh-btn {
+    padding: 0.75rem 1.5rem;
+    font-size: 0.9rem;
+  }
+
+  .snapshot-btn {
+    padding: 0.6rem 1rem;
+    font-size: 0.85rem;
+  }
+}

@@ -16,3 +16,22 @@ body {
   margin: 0 auto;
   padding: 2rem;
 }
+
+/* Responsive */
+@media (max-width: 1024px) {
+  .dashboard {
+    padding: 1.5rem;
+  }
+}
+
+@media (max-width: 768px) {
+  .dashboard {
+    padding: 1rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .dashboard {
+    padding: 0.75rem;
+  }
+}

@@ -53,3 +53,29 @@
     transform: translateY(0);
   }
 }
+
+/* Responsive */
+@media (max-width: 768px) {
+  .stats-tabs {
+    width: 100%;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .stats-tab {
+    padding: 0.5rem 1rem;
+    font-size: 0.85rem;
+    white-space: nowrap;
+  }
+
+  .stats-content {
+    min-height: 300px;
+  }
+}
+
+@media (max-width: 480px) {
+  .stats-tab {
+    padding: 0.5rem 0.75rem;
+    font-size: 0.8rem;
+  }
+}

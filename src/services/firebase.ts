@@ -1,5 +1,5 @@
 import { initializeApp } from 'firebase/app'
-import { getFirestore, doc, getDoc, Timestamp } from 'firebase/firestore'
+import { getFirestore, doc, getDoc, collection, getDocs, addDoc, deleteDoc, Timestamp } from 'firebase/firestore'
 import type { Participant, ParticipantResponse } from '../types'
 
 const firebaseConfig = {
@@ -61,6 +61,41 @@ export const triggerManualSnapshot = async (): Promise<{ success: boolean; count
   }
 
   return await response.json()
+}
+
+// Types pour les événements du graphique
+export interface GraphEvent {
+  id: string
+  date: string
+  label: string
+}
+
+// Récupérer tous les événements
+export const fetchGraphEvents = async (): Promise<GraphEvent[]> => {
+  const eventsRef = collection(db, 'graph_events')
+  const snapshot = await getDocs(eventsRef)
+  
+  return snapshot.docs.map(doc => ({
+    id: doc.id,
+    ...doc.data()
+  })) as GraphEvent[]
+}
+
+// Ajouter un événement
+export const addGraphEvent = async (event: Omit<GraphEvent, 'id'>): Promise<GraphEvent> => {
+  const eventsRef = collection(db, 'graph_events')
+  const docRef = await addDoc(eventsRef, event)
+  
+  return {
+    id: docRef.id,
+    ...event
+  }
+}
+
+// Supprimer un événement
+export const deleteGraphEvent = async (eventId: string): Promise<void> => {
+  const eventRef = doc(db, 'graph_events', eventId)
+  await deleteDoc(eventRef)
 }
 
 export { db }

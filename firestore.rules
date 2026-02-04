@@ -6,5 +6,10 @@ service cloud.firestore {
       allow read: if true;
       allow write: if false; // Seules les Cloud Functions peuvent écrire
     }
+    
+    // Graph events - lecture/écriture publique (dashboard interne)
+    match /graph_events/{document=**} {
+      allow read, write: if true;
+    }
   }
 }

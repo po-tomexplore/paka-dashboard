@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useEffect } from 'react'
 import {
   LineChart,
   Line,
@@ -12,11 +12,13 @@ import {
   Bar,
   PieChart,
   Pie,
-  Cell
+  Cell,
+  ReferenceLine
 } from 'recharts'
 import type { Participant } from '../../types'
 import { getBirthDate, getPostalCode, calculateAge } from '../../utils/helpers'
 import { AGE_RANGES } from '../../constants'
+import { fetchGraphEvents, addGraphEvent, deleteGraphEvent, type GraphEvent } from '../../services/firebase'
 import './ParticipantGraph.css'
 
 interface ParticipantGraphProps {
@@ -35,6 +37,50 @@ export const ParticipantGraph = ({ participants }: ParticipantGraphProps) => {
   })
   const [selectedAgeRange, setSelectedAgeRange] = useState<string>('all')
   const [selectedDepartment, setSelectedDepartment] = useState<string>('all')
+  
+  // Gestion des événements (Firestore)
+  const [events, setEvents] = useState<GraphEvent[]>([])
+  const [showEventForm, setShowEventForm] = useState(false)
+  const [newEventDate, setNewEventDate] = useState('')
+  const [newEventLabel, setNewEventLabel] = useState('')
+
+  // Charger les événements depuis Firestore au montage
+  useEffect(() => {
+    const loadEvents = async () => {
+      try {
+        const firestoreEvents = await fetchGraphEvents()
+        setEvents(firestoreEvents)
+      } catch (error) {
+        console.error('Erreur chargement événements:', error)
+      }
+    }
+    loadEvents()
+  }, [])
+
+  const addEvent = async () => {
+    if (!newEventDate || !newEventLabel.trim()) return
+    try {
+      const newEvent = await addGraphEvent({
+        date: newEventDate,
+        label: newEventLabel.trim()
+      })
+      setEvents(prev => [...prev, newEvent])
+      setNewEventDate('')
+      setNewEventLabel('')
+      setShowEventForm(false)
+    } catch (error) {
+      console.error('Erreur ajout événement:', error)
+    }
+  }
+
+  const removeEvent = async (id: string) => {
+    try {
+      await deleteGraphEvent(id)
+      setEvents(prev => prev.filter(e => e.id !== id))
+    } catch (error) {
+      console.error('Erreur suppression événement:', error)
+    }
+  }
 
   // Filtrer les participants selon les critères
   const filteredParticipants = useMemo(() => {
@@ -51,6 +97,7 @@ export const ParticipantGraph = ({ participants }: ParticipantGraphProps) => {
         const birthDate = getBirthDate(p)
         if (!birthDate) return false
         const age = calculateAge(birthDate)
+        if (age === null) return false
         const range = AGE_RANGES.find(r => r.label === selectedAgeRange)
         if (range && (age < range.min || age > range.max)) return false
       }
@@ -99,6 +146,7 @@ export const ParticipantGraph = ({ participants }: ParticipantGraphProps) => {
       const birthDate = getBirthDate(p)
       if (birthDate) {
         const age = calculateAge(birthDate)
+        if (age === null) return
         const range = AGE_RANGES.find(r => age >= r.min && age <= r.max)
         if (range) {
           byAge[range.label]++
@@ -246,6 +294,54 @@ export const ParticipantGraph = ({ participants }: ParticipantGraphProps) => {
         )}
       </div>
 
+      {chartType === 'evolution' && (
+        <div className="events-section">
+          <div className="events-header">
+            <span>🎯 Événements ({events.length})</span>
+            <button 
+              className="add-event-btn"
+              onClick={() => setShowEventForm(!showEventForm)}
+            >
+              {showEventForm ? '✕ Annuler' : '+ Ajouter'}
+            </button>
+          </div>
+          
+          {showEventForm && (
+            <div className="event-form">
+              <input
+                type="date"
+                value={newEventDate}
+                onChange={(e) => setNewEventDate(e.target.value)}
+                min={dateMinMax.min}
+                max={dateMinMax.max}
+              />
+              <input
+                type="text"
+                placeholder="Nom de l'événement..."
+                value={newEventLabel}
+                onChange={(e) => setNewEventLabel(e.target.value)}
+                onKeyDown={(e) => e.key === 'Enter' && addEvent()}
+              />
+              <button onClick={addEvent}>✓</button>
+            </div>
+          )}
+          
+          {events.length > 0 && (
+            <div className="events-list">
+              {events.map(event => (
+                <div key={event.id} className="event-tag">
+                  <span className="event-date">
+                    {new Date(event.date).toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit' })}
+                  </span>
+                  <span className="event-label">{event.label}</span>
+                  <button onClick={() => removeEvent(event.id)}>✕</button>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
+
       <div className="graph-container">
         {chartType === 'evolution' && (
           <ResponsiveContainer width="100%" height={400}>
@@ -286,6 +382,24 @@ export const ParticipantGraph = ({ participants }: ParticipantGraphProps) => {
                 strokeWidth={2}
                 dot={false}
               />
+              {events.map(event => {
+                const formattedDate = new Date(event.date).toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit' })
+                return (
+                  <ReferenceLine
+                    key={event.id}
+                    x={formattedDate}
+                    stroke="#43e97b"
+                    strokeWidth={2}
+                    strokeDasharray="5 5"
+                    label={{
+                      value: event.label,
+                      position: 'top',
+                      fill: '#43e97b',
+                      fontSize: 11
+                    }}
+                  />
+                )
+              })}
             </LineChart>
           </ResponsiveContainer>
         )}
@@ -328,7 +442,7 @@ export const ParticipantGraph = ({ participants }: ParticipantGraphProps) => {
                   outerRadius={120}
                   paddingAngle={2}
                   dataKey="value"
-                  label={({ name, percent }) => `${name} (${(percent * 100).toFixed(0)}%)`}
+                  label={({ name, percent }) => `${name} (${((percent ?? 0) * 100).toFixed(0)}%)`}
                   labelLine={{ stroke: '#888' }}
                 >
                   {ageData.map((_, index) => (
@@ -365,7 +479,7 @@ export const ParticipantGraph = ({ participants }: ParticipantGraphProps) => {
                   borderRadius: '8px',
                   color: '#fff'
                 }}
-                formatter={(value: number) => [`${value} participants`, 'Total']}
+                formatter={(value) => [`${value} participants`, 'Total']}
               />
               <Bar dataKey="value" name="Participants" radius={[4, 4, 0, 0]}>
                 {departmentData.map((_, index) => (

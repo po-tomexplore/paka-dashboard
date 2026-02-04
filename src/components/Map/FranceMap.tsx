@@ -10,6 +10,19 @@ import type { Participant } from '../../types'
 import { getPostalCode } from '../../utils/helpers'
 import './FranceMap.css'
 
+// Fix Leaflet marker icons in production (Vite bundler issue)
+import markerIcon2x from 'leaflet/dist/images/marker-icon-2x.png'
+import markerIcon from 'leaflet/dist/images/marker-icon.png'
+import markerShadow from 'leaflet/dist/images/marker-shadow.png'
+
+// @ts-expect-error - Leaflet icon fix
+delete L.Icon.Default.prototype._getIconUrl
+L.Icon.Default.mergeOptions({
+  iconUrl: markerIcon,
+  iconRetinaUrl: markerIcon2x,
+  shadowUrl: markerShadow,
+})
+
 interface FranceMapProps {
   participants: Participant[]
 }

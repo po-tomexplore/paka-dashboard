@@ -142,6 +142,127 @@
   border-radius: 8px !important;
 }
 
+/* Events section */
+.events-section {
+  margin-bottom: 1rem;
+  padding: 1rem;
+  background: rgba(67, 233, 123, 0.05);
+  border: 1px solid rgba(67, 233, 123, 0.2);
+  border-radius: 12px;
+}
+
+.events-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.75rem;
+}
+
+.events-header span {
+  font-size: 0.9rem;
+  color: #43e97b;
+}
+
+.add-event-btn {
+  padding: 0.4rem 0.8rem;
+  border: 1px solid rgba(67, 233, 123, 0.3);
+  border-radius: 6px;
+  background: transparent;
+  color: #43e97b;
+  font-size: 0.8rem;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.add-event-btn:hover {
+  background: rgba(67, 233, 123, 0.1);
+}
+
+.event-form {
+  display: flex;
+  gap: 0.5rem;
+  margin-bottom: 0.75rem;
+}
+
+.event-form input[type="date"],
+.event-form input[type="text"] {
+  padding: 0.5rem 0.75rem;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.05);
+  color: #fff;
+  font-size: 0.85rem;
+}
+
+.event-form input[type="text"] {
+  flex: 1;
+}
+
+.event-form input:focus {
+  outline: none;
+  border-color: #43e97b;
+}
+
+.event-form button {
+  padding: 0.5rem 1rem;
+  border: none;
+  border-radius: 8px;
+  background: #43e97b;
+  color: #1e1e32;
+  font-weight: bold;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.event-form button:hover {
+  background: #38f9d7;
+}
+
+.events-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.event-tag {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.4rem 0.75rem;
+  background: rgba(67, 233, 123, 0.1);
+  border-radius: 20px;
+  font-size: 0.8rem;
+}
+
+.event-tag .event-date {
+  color: #888;
+}
+
+.event-tag .event-label {
+  color: #43e97b;
+}
+
+.event-tag button {
+  padding: 0;
+  width: 18px;
+  height: 18px;
+  border: none;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.1);
+  color: #888;
+  font-size: 0.7rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.event-tag button:hover {
+  background: rgba(245, 87, 108, 0.3);
+  color: #f5576c;
+}
+
 /* Responsive */
 @media (max-width: 768px) {
   .graph-filters {

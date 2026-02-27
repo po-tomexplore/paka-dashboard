@@ -23,8 +23,10 @@ function App() {
     error,
     refresh,
     uniquePostalCodes,
+    uniqueTarifs,
     statsByDepartment,
     statsByAge,
+    statsByTarif,
     counts,
     lastSyncedAt,
   } = useParticipants()
@@ -36,10 +38,12 @@ function App() {
     setSelectedAgeRange,
     selectedPostalCode,
     setSelectedPostalCode,
+    selectedTarif,
+    setSelectedTarif,
     filteredParticipants,
   } = useFilters(participants)
 
-  const hasFilters = searchTerm !== '' || selectedAgeRange !== 'Tous' || selectedPostalCode !== 'Tous'
+  const hasFilters = searchTerm !== '' || selectedAgeRange !== 'Tous' || selectedPostalCode !== 'Tous' || selectedTarif !== 'Tous'
 
   // Afficher la page de login si non authentifié
   if (!isAuthenticated) {
@@ -65,6 +69,10 @@ function App() {
         onPostalCodeChange={setSelectedPostalCode}
         uniquePostalCodes={uniquePostalCodes}
         statsByAge={statsByAge}
+        selectedTarif={selectedTarif}
+        onTarifChange={setSelectedTarif}
+        uniqueTarifs={uniqueTarifs}
+        statsByTarif={statsByTarif}
       />
 
       {error && <ErrorMessage message={error} />}

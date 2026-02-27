@@ -94,6 +94,25 @@ export const useParticipants = () => {
     return stats
   }, [participants])
 
+  // Liste unique des tarifs (id_ticket) + stats
+  const uniqueTarifs = useMemo(() => {
+    const ids = new Set<string>()
+    participants.forEach(p => {
+      if (p.id_ticket) ids.add(p.id_ticket)
+    })
+    return ['Tous', ...Array.from(ids).sort()]
+  }, [participants])
+
+  const statsByTarif = useMemo(() => {
+    const stats: Record<string, number> = {}
+    participants.forEach(p => {
+      if (p.id_ticket) {
+        stats[p.id_ticket] = (stats[p.id_ticket] || 0) + 1
+      }
+    })
+    return stats
+  }, [participants])
+
   // Compteurs
   const counts = useMemo(() => ({
     total: participants.length,
@@ -108,8 +127,10 @@ export const useParticipants = () => {
     error,
     refresh,
     uniquePostalCodes,
+    uniqueTarifs,
     statsByDepartment,
     statsByAge,
+    statsByTarif,
     counts,
     lastSyncedAt,
   }

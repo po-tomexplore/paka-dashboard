@@ -7,6 +7,7 @@ export const useFilters = (participants: Participant[]) => {
   const [searchTerm, setSearchTerm] = useState('')
   const [selectedAgeRange, setSelectedAgeRange] = useState('Tous')
   const [selectedPostalCode, setSelectedPostalCode] = useState('Tous')
+  const [selectedTarif, setSelectedTarif] = useState('Tous')
 
   const filteredParticipants = useMemo(() => {
     return participants.filter(p => {
@@ -41,10 +42,17 @@ export const useFilters = (participants: Participant[]) => {
           return false
         }
       }
-      
+
+      // Filtre tarif
+      if (selectedTarif !== 'Tous') {
+        if (p.id_ticket !== selectedTarif) {
+          return false
+        }
+      }
+
       return true
     })
-  }, [participants, searchTerm, selectedAgeRange, selectedPostalCode])
+  }, [participants, searchTerm, selectedAgeRange, selectedPostalCode, selectedTarif])
 
   return {
     searchTerm,
@@ -53,6 +61,8 @@ export const useFilters = (participants: Participant[]) => {
     setSelectedAgeRange,
     selectedPostalCode,
     setSelectedPostalCode,
+    selectedTarif,
+    setSelectedTarif,
     filteredParticipants,
   }
 }

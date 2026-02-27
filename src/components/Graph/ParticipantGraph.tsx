@@ -69,7 +69,8 @@ function filterParticipants(
   participants: Participant[],
   dateRange: { start: string; end: string },
   selectedAgeRange: string,
-  selectedDepartment: string
+  selectedDepartment: string,
+  selectedTarif: string = 'all'
 ): Participant[] {
   return participants.filter(p => {
     if (dateRange.start || dateRange.end) {
@@ -88,6 +89,9 @@ function filterParticipants(
     if (selectedDepartment !== 'all') {
       const postalCode = getPostalCode(p)
       if (!postalCode || !postalCode.startsWith(selectedDepartment)) return false
+    }
+    if (selectedTarif !== 'all') {
+      if (p.id_ticket !== selectedTarif) return false
     }
     return true
   })
@@ -156,6 +160,7 @@ export const ParticipantGraph = ({ participants, selectedYear, dataByYear }: Par
   const [dateRange, setDateRange] = useState<{ start: string; end: string }>({ start: '', end: '' })
   const [selectedAgeRange, setSelectedAgeRange] = useState<string>('all')
   const [selectedDepartment, setSelectedDepartment] = useState<string>('all')
+  const [selectedTarif, setSelectedTarif] = useState<string>('all')
 
   // Graph events (Firestore)
   const [events, setEvents] = useState<GraphEvent[]>([])
@@ -211,8 +216,8 @@ export const ParticipantGraph = ({ participants, selectedYear, dataByYear }: Par
 
   // Filtered participants (single-year mode)
   const filteredParticipants = useMemo(() => {
-    return filterParticipants(activeParticipants, dateRange, selectedAgeRange, selectedDepartment)
-  }, [activeParticipants, dateRange, selectedAgeRange, selectedDepartment])
+    return filterParticipants(activeParticipants, dateRange, selectedAgeRange, selectedDepartment, selectedTarif)
+  }, [activeParticipants, dateRange, selectedAgeRange, selectedDepartment, selectedTarif])
 
   // Single-year data
   const evolutionData = useMemo(() => buildEvolutionData(filteredParticipants), [filteredParticipants])
@@ -226,7 +231,7 @@ export const ParticipantGraph = ({ participants, selectedYear, dataByYear }: Par
     const yearDataMap: Record<number, ReturnType<typeof buildEvolutionData>> = {}
     for (const event of EVENTS) {
       const yearParticipants = getParticipantsForYear(event.year, dataByYear, participants)
-      const filtered = filterParticipants(yearParticipants, { start: '', end: '' }, selectedAgeRange, selectedDepartment)
+      const filtered = filterParticipants(yearParticipants, { start: '', end: '' }, selectedAgeRange, selectedDepartment, selectedTarif)
       yearDataMap[event.year] = buildEvolutionData(filtered)
     }
 
@@ -245,7 +250,7 @@ export const ParticipantGraph = ({ participants, selectedYear, dataByYear }: Par
       result.push(row)
     }
     return result
-  }, [isComparison, dataByYear, participants, selectedAgeRange, selectedDepartment])
+  }, [isComparison, dataByYear, participants, selectedAgeRange, selectedDepartment, selectedTarif])
 
   const comparisonAgeData = useMemo(() => {
     if (!isComparison) return []
@@ -289,6 +294,15 @@ export const ParticipantGraph = ({ participants, selectedYear, dataByYear }: Par
       .slice(0, 15)
       .map(({ row }) => row)
   }, [isComparison, dataByYear, participants])
+
+  // Unique tarifs for filter
+  const uniqueTarifs = useMemo(() => {
+    const ids = new Set<string>()
+    activeParticipants.forEach(p => {
+      if (p.id_ticket) ids.add(p.id_ticket)
+    })
+    return Array.from(ids).sort()
+  }, [activeParticipants])
 
   // Unique departments for filter
   const uniqueDepartments = useMemo(() => {
@@ -377,10 +391,20 @@ export const ParticipantGraph = ({ participants, selectedYear, dataByYear }: Par
                 ))}
               </select>
             </div>
+            <div className="filter-group">
+              <label>🎫 Tarif</label>
+              <select value={selectedTarif} onChange={(e) => setSelectedTarif(e.target.value)}>
+                <option value="all">Tous</option>
+                {uniqueTarifs.map(t => (
+                  <option key={t} value={t}>#{t}</option>
+                ))}
+              </select>
+            </div>
             <button className="reset-filters" onClick={() => {
               setDateRange({ start: '', end: '' })
               setSelectedAgeRange('all')
               setSelectedDepartment('all')
+              setSelectedTarif('all')
             }}>
               🔄 Reset
             </button>

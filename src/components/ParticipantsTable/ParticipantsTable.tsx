@@ -11,7 +11,7 @@ interface ParticipantsTableProps {
 }
 
 
-type SortKey = 'first_name' | 'last_name' | 'email' | 'age' | 'birth' | 'postal' | 'barcode' | 'create_date' | 'paid';
+type SortKey = 'first_name' | 'last_name' | 'email' | 'age' | 'birth' | 'postal' | 'barcode' | 'create_date' | 'paid' | 'tarif';
 type SortOrder = 'asc' | 'desc';
 
 const getSortValue = (participant: Participant, key: SortKey): string | number | boolean | null => {
@@ -36,6 +36,8 @@ const getSortValue = (participant: Participant, key: SortKey): string | number |
       return participant.create_date;
     case 'paid':
       return participant.paid;
+    case 'tarif':
+      return participant.id_ticket || '';
     default:
       return '';
   }
@@ -111,6 +113,7 @@ export const ParticipantsTable = ({ participants, loading, hasFilters }: Partici
             <th className="sortable" onClick={() => handleSort('age')}>Âge{sortIcon('age')}</th>
             <th className="sortable" onClick={() => handleSort('postal')}>Code postal{sortIcon('postal')}</th>
             <th className="sortable" onClick={() => handleSort('barcode')}>Code-barre{sortIcon('barcode')}</th>
+            <th className="sortable" onClick={() => handleSort('tarif')}>Tarif{sortIcon('tarif')}</th>
             <th className="sortable" onClick={() => handleSort('create_date')}>Inscription{sortIcon('create_date')}</th>
             <th className="sortable" onClick={() => handleSort('paid')}>Payé{sortIcon('paid')}</th>
           </tr>
@@ -118,7 +121,7 @@ export const ParticipantsTable = ({ participants, loading, hasFilters }: Partici
         <tbody>
           {sortedParticipants.length === 0 ? (
             <tr>
-              <td colSpan={10} className="no-data">
+              <td colSpan={11} className="no-data">
                 {hasFilters ? 'Aucun résultat trouvé' : 'Aucun participant'}
               </td>
             </tr>
@@ -148,6 +151,7 @@ export const ParticipantsTable = ({ participants, loading, hasFilters }: Partici
                     ) : '-'}
                   </td>
                   <td className="barcode">{participant.barcode}</td>
+                  <td><span className="tarif-badge">#{participant.id_ticket}</span></td>
                   <td>{formatDate(participant.create_date)}</td>
                   <td>
                     <span className={`status-badge ${participant.paid ? 'status-paid' : 'status-unpaid'}`}>

@@ -1,7 +1,8 @@
 import { useState, useEffect, useMemo } from 'react'
 import type { Participant } from '../types'
 import { AGE_RANGES } from '../constants'
-import { fetchParticipantsFromFirestore } from '../services/firebase'
+import { fetchParticipantsFromFirestore, fetchTarifNames } from '../services/firebase'
+import { EVENT_ID } from '../constants'
 import { getBirthDate, getPostalCode, calculateAge } from '../utils/helpers'
 
 export const useParticipants = () => {
@@ -9,6 +10,7 @@ export const useParticipants = () => {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [lastSyncedAt, setLastSyncedAt] = useState<string | null>(null)
+  const [tarifNames, setTarifNames] = useState<Record<string, string>>({})
 
   // Charger les données depuis Firestore
   const loadData = async () => {
@@ -45,6 +47,7 @@ export const useParticipants = () => {
   // Charger au démarrage
   useEffect(() => {
     loadData()
+    fetchTarifNames(EVENT_ID).then(setTarifNames).catch(() => {})
   }, [])
 
   // Liste unique des codes postaux
@@ -131,6 +134,7 @@ export const useParticipants = () => {
     statsByDepartment,
     statsByAge,
     statsByTarif,
+    tarifNames,
     counts,
     lastSyncedAt,
   }

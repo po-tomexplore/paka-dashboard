@@ -27,6 +27,7 @@ function App() {
     statsByDepartment,
     statsByAge,
     statsByTarif,
+    tarifNames,
     counts,
     lastSyncedAt,
   } = useParticipants()
@@ -73,6 +74,7 @@ function App() {
         onTarifChange={setSelectedTarif}
         uniqueTarifs={uniqueTarifs}
         statsByTarif={statsByTarif}
+        tarifNames={tarifNames}
       />
 
       {error && <ErrorMessage message={error} />}
@@ -89,12 +91,14 @@ function App() {
         statsByAge={statsByAge}
         participantsWithBirthDate={counts.withBirthDate}
         participants={participants}
+        tarifNames={tarifNames}
       />
 
       <ParticipantsTable
         participants={filteredParticipants}
         loading={loading}
         hasFilters={hasFilters}
+        tarifNames={tarifNames}
       />
 
       <Footer />

@@ -33,6 +33,7 @@ interface ParticipantGraphProps {
   participants: Participant[]
   selectedYear: YearSelection
   dataByYear: Record<number, YearData>
+  tarifNames: Record<string, string>
 }
 
 type ChartType = 'evolution' | 'age' | 'department'
@@ -155,7 +156,7 @@ function buildDepartmentData(participants: Participant[]) {
     .map(([dept, count]) => ({ name: dept, value: count }))
 }
 
-export const ParticipantGraph = ({ participants, selectedYear, dataByYear }: ParticipantGraphProps) => {
+export const ParticipantGraph = ({ participants, selectedYear, dataByYear, tarifNames }: ParticipantGraphProps) => {
   const [chartType, setChartType] = useState<ChartType>('evolution')
   const [dateRange, setDateRange] = useState<{ start: string; end: string }>({ start: '', end: '' })
   const [selectedAgeRange, setSelectedAgeRange] = useState<string>('all')
@@ -396,7 +397,7 @@ export const ParticipantGraph = ({ participants, selectedYear, dataByYear }: Par
               <select value={selectedTarif} onChange={(e) => setSelectedTarif(e.target.value)}>
                 <option value="all">Tous</option>
                 {uniqueTarifs.map(t => (
-                  <option key={t} value={t}>#{t}</option>
+                  <option key={t} value={t}>{tarifNames[t] || `#${t}`}</option>
                 ))}
               </select>
             </div>

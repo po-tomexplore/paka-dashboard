@@ -12,6 +12,7 @@ interface StatsSectionProps {
   statsByAge: Record<string, number>
   participantsWithBirthDate: number
   participants: Participant[]
+  tarifNames: Record<string, string>
 }
 
 type TabType = 'stats' | 'map' | 'graph'
@@ -25,10 +26,17 @@ export const StatsSection = ({
   statsByDepartment,
   statsByAge,
   participantsWithBirthDate,
-  participants
+  participants,
+  tarifNames,
 }: StatsSectionProps) => {
   const [activeTab, setActiveTab] = useState<TabType>('stats')
-  const { selectedYear, selectYear, dataByYear } = useMultiYearParticipants()
+  const { selectedYear, selectYear, dataByYear, tarifNamesByYear } = useMultiYearParticipants()
+
+  // Merge tarif names from main hook and multi-year hook
+  const mergedTarifNames: Record<string, string> = {
+    ...tarifNames,
+    ...Object.values(tarifNamesByYear).reduce((acc, m) => ({ ...acc, ...m }), {}),
+  }
 
   const isLoading = selectedYear === 'both'
     ? EVENTS.some(e => dataByYear[e.year]?.loading)
@@ -99,6 +107,7 @@ export const StatsSection = ({
               participants={participants}
               selectedYear={selectedYear}
               dataByYear={dataByYear}
+              tarifNames={mergedTarifNames}
             />
           </>
         )}

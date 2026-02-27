@@ -12,6 +12,7 @@ interface FiltersProps {
   onTarifChange: (value: string) => void
   uniqueTarifs: string[]
   statsByTarif: Record<string, number>
+  tarifNames: Record<string, string>
 }
 
 export const Filters = ({
@@ -25,6 +26,7 @@ export const Filters = ({
   onTarifChange,
   uniqueTarifs,
   statsByTarif,
+  tarifNames,
 }: FiltersProps) => {
   return (
     <div className="filters">
@@ -62,7 +64,7 @@ export const Filters = ({
         >
           {uniqueTarifs.map(tarif => (
             <option key={tarif} value={tarif}>
-              {tarif === 'Tous' ? 'Tous' : `#${tarif} (${statsByTarif[tarif] || 0})`}
+              {tarif === 'Tous' ? 'Tous' : `${tarifNames[tarif] || `#${tarif}`} (${statsByTarif[tarif] || 0})`}
             </option>
           ))}
         </select>

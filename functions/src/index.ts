@@ -73,6 +73,49 @@ async function authenticate(): Promise<string> {
   return data.accessToken;
 }
 
+// Récupérer les tickets (tarifs) pour un événement donné
+async function fetchTickets(token: string, eventId: string): Promise<Record<string, string>> {
+  const url = `https://api.weezevent.com/tickets?api_key=${WEEZEVENT_CONFIG.API_KEY}&access_token=${token}&id_event[]=${eventId}`;
+  const response = await fetch(url);
+  if (!response.ok) {
+    throw new Error(`Tickets fetch error: ${response.status}`);
+  }
+  const data = await response.json() as { events?: Array<{ tickets?: Array<{ id: number | string; name: string }>; categories?: unknown[] }> };
+
+  // Recursively extract all ticket id→name from nested categories
+  const mapping: Record<string, string> = {};
+  function extractTickets(node: { tickets?: Array<{ id: number | string; name: string }>; categories?: unknown[] }) {
+    if (node.tickets) {
+      for (const t of node.tickets) {
+        mapping[String(t.id)] = t.name;
+      }
+    }
+    if (node.categories && Array.isArray(node.categories)) {
+      for (const cat of node.categories) {
+        extractTickets(cat as { tickets?: Array<{ id: number | string; name: string }>; categories?: unknown[] });
+      }
+    }
+  }
+
+  if (data.events) {
+    for (const event of data.events) {
+      extractTickets(event);
+    }
+  }
+
+  console.log(`🎫 Fetched ${Object.keys(mapping).length} ticket names for event ${eventId}`);
+  return mapping;
+}
+
+// Store tarif names mapping in Firestore
+async function storeTarifNames(eventId: string, mapping: Record<string, string>) {
+  await db.collection('tarif_names').doc(`event_${eventId}`).set({
+    mapping,
+    syncedAt: admin.firestore.FieldValue.serverTimestamp(),
+  });
+  console.log(`✅ Tarif names cached for event ${eventId}`);
+}
+
 // Récupérer les participants pour un événement donné
 async function fetchParticipants(token: string, eventId: string = WEEZEVENT_CONFIG.EVENT_ID): Promise<ParticipantResponse> {
   const url = `https://api.weezevent.com/participant/list?api_key=${WEEZEVENT_CONFIG.API_KEY}&access_token=${token}&id_event[]=${eventId}&full=1`;
@@ -121,6 +164,14 @@ async function syncWeezeventData(eventId: string = WEEZEVENT_CONFIG.EVENT_ID) {
     await db.collection('weezevent_snapshots').doc(`event_${eventId}`).set(snapshot);
     console.log(`✅ Event ${eventId} snapshot updated`);
 
+    // 6. Fetch and cache tarif names
+    try {
+      const ticketMapping = await fetchTickets(token, eventId);
+      await storeTarifNames(eventId, ticketMapping);
+    } catch (ticketErr) {
+      console.warn('⚠️ Could not fetch ticket names:', ticketErr);
+    }
+
     return { success: true, count: data.participants?.length || 0 };
   } catch (error) {
     console.error('❌ Sync error:', error);
@@ -162,6 +213,19 @@ export const manualWeezeventSync = onRequest({
 
       if (docSnap.exists) {
         const data = docSnap.data();
+
+        // Also ensure tarif names are cached
+        const tarifDoc = await db.collection('tarif_names').doc(`event_${eventId}`).get();
+        if (!tarifDoc.exists) {
+          try {
+            const token = await authenticate();
+            const ticketMapping = await fetchTickets(token, eventId);
+            await storeTarifNames(eventId, ticketMapping);
+          } catch (ticketErr) {
+            console.warn('⚠️ Could not fetch ticket names:', ticketErr);
+          }
+        }
+
         res.json({ cached: true, count: data?.totalParticipants || data?.participants?.length || 0 });
         return;
       }
@@ -190,6 +254,14 @@ export const manualWeezeventSync = onRequest({
       for (let i = 0; i < chunkCount; i++) {
         const chunk = participants.slice(i * CHUNK_SIZE, (i + 1) * CHUNK_SIZE);
         await docRef.collection('chunks').doc(String(i)).set({ participants: chunk });
+      }
+
+      // Also fetch and cache tarif names
+      try {
+        const ticketMapping = await fetchTickets(token, eventId);
+        await storeTarifNames(eventId, ticketMapping);
+      } catch (ticketErr) {
+        console.warn('⚠️ Could not fetch ticket names:', ticketErr);
       }
 
       console.log(`✅ Event ${eventId} cached in ${chunkCount} chunks (${participants.length} participants)`);

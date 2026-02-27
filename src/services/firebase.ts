@@ -122,6 +122,18 @@ export const triggerSyncEventIfMissing = async (eventId: string): Promise<{ cach
   return await response.json()
 }
 
+// Fetch tarif names mapping for an event from Firestore
+export const fetchTarifNames = async (eventId: string): Promise<Record<string, string>> => {
+  const docRef = doc(db, 'tarif_names', `event_${eventId}`)
+  const docSnap = await getDoc(docRef)
+
+  if (!docSnap.exists()) {
+    return {}
+  }
+
+  return (docSnap.data().mapping as Record<string, string>) || {}
+}
+
 // Types pour les événements du graphique
 export interface GraphEvent {
   id: string

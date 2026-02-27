@@ -8,13 +8,14 @@ interface ParticipantsTableProps {
   participants: Participant[]
   loading: boolean
   hasFilters: boolean
+  tarifNames: Record<string, string>
 }
 
 
 type SortKey = 'first_name' | 'last_name' | 'email' | 'age' | 'birth' | 'postal' | 'barcode' | 'create_date' | 'paid' | 'tarif';
 type SortOrder = 'asc' | 'desc';
 
-const getSortValue = (participant: Participant, key: SortKey): string | number | boolean | null => {
+const getSortValue = (participant: Participant, key: SortKey, tarifNames?: Record<string, string>): string | number | boolean | null => {
   switch (key) {
     case 'first_name':
       return participant.owner?.first_name?.toLowerCase() || '';
@@ -37,21 +38,21 @@ const getSortValue = (participant: Participant, key: SortKey): string | number |
     case 'paid':
       return participant.paid;
     case 'tarif':
-      return participant.id_ticket || '';
+      return (tarifNames?.[participant.id_ticket] || participant.id_ticket || '').toLowerCase();
     default:
       return '';
   }
 };
 
-export const ParticipantsTable = ({ participants, loading, hasFilters }: ParticipantsTableProps) => {
+export const ParticipantsTable = ({ participants, loading, hasFilters, tarifNames }: ParticipantsTableProps) => {
   const [sortKey, setSortKey] = useState<SortKey>('last_name');
   const [sortOrder, setSortOrder] = useState<SortOrder>('asc');
 
   const sortedParticipants = useMemo(() => {
     const sorted = [...participants];
     sorted.sort((a, b) => {
-      let aValue = getSortValue(a, sortKey);
-      let bValue = getSortValue(b, sortKey);
+      let aValue = getSortValue(a, sortKey, tarifNames);
+      let bValue = getSortValue(b, sortKey, tarifNames);
 
       // Pour l'âge, nulls en bas
       if (sortKey === 'age') {
@@ -75,7 +76,7 @@ export const ParticipantsTable = ({ participants, loading, hasFilters }: Partici
       return 0;
     });
     return sorted;
-  }, [participants, sortKey, sortOrder]);
+  }, [participants, sortKey, sortOrder, tarifNames]);
 
   const handleSort = (key: SortKey) => {
     if (sortKey === key) {
@@ -151,7 +152,7 @@ export const ParticipantsTable = ({ participants, loading, hasFilters }: Partici
                     ) : '-'}
                   </td>
                   <td className="barcode">{participant.barcode}</td>
-                  <td><span className="tarif-badge">#{participant.id_ticket}</span></td>
+                  <td><span className="tarif-badge">{tarifNames[participant.id_ticket] || `#${participant.id_ticket}`}</span></td>
                   <td>{formatDate(participant.create_date)}</td>
                   <td>
                     <span className={`status-badge ${participant.paid ? 'status-paid' : 'status-unpaid'}`}>

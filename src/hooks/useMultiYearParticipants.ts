@@ -1,7 +1,7 @@
 import { useState, useCallback } from 'react'
 import type { Participant } from '../types'
 import { EVENTS, type EventYear } from '../constants'
-import { fetchEventParticipants, triggerSyncEventIfMissing } from '../services/firebase'
+import { fetchEventParticipants, triggerSyncEventIfMissing, fetchTarifNames } from '../services/firebase'
 
 export type YearSelection = EventYear | 'both'
 
@@ -14,6 +14,7 @@ interface YearData {
 export const useMultiYearParticipants = () => {
   const [selectedYear, setSelectedYear] = useState<YearSelection>(2026)
   const [dataByYear, setDataByYear] = useState<Record<number, YearData>>({})
+  const [tarifNamesByYear, setTarifNamesByYear] = useState<Record<number, Record<string, string>>>({})
 
   const loadYear = useCallback(async (year: EventYear) => {
     // Skip if already loaded or currently loading
@@ -47,6 +48,11 @@ export const useMultiYearParticipants = () => {
           error: null
         }
       }))
+
+      // Also fetch tarif names for this year
+      fetchTarifNames(event.id).then(mapping => {
+        setTarifNamesByYear(prev => ({ ...prev, [year]: mapping }))
+      }).catch(() => {})
     } catch (err) {
       setDataByYear(prev => ({
         ...prev,
@@ -76,5 +82,6 @@ export const useMultiYearParticipants = () => {
     selectedYear,
     selectYear,
     dataByYear,
+    tarifNamesByYear,
   }
 }

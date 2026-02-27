@@ -7,6 +7,12 @@ service cloud.firestore {
       allow write: if false; // Seules les Cloud Functions peuvent écrire
     }
     
+    // Tarif names - lecture publique, écriture uniquement par les functions
+    match /tarif_names/{document=**} {
+      allow read: if true;
+      allow write: if false;
+    }
+
     // Graph events - lecture/écriture publique (dashboard interne)
     match /graph_events/{document=**} {
       allow read, write: if true;

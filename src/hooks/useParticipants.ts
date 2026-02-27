@@ -47,7 +47,13 @@ export const useParticipants = () => {
   // Charger au démarrage
   useEffect(() => {
     loadData()
-    fetchTarifNames(EVENT_ID).then(setTarifNames).catch(() => {})
+    console.log('🎫 useParticipants: fetching tarif names for EVENT_ID =', EVENT_ID)
+    fetchTarifNames(EVENT_ID).then(names => {
+      console.log('🎫 useParticipants: got tarif names =', names)
+      setTarifNames(names)
+    }).catch(err => {
+      console.error('🎫 useParticipants: error fetching tarif names', err)
+    })
   }, [])
 
   // Liste unique des codes postaux

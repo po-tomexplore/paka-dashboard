@@ -54,6 +54,63 @@
   }
 }
 
+/* Year selector */
+.year-selector {
+  display: flex;
+  gap: 0.25rem;
+  margin-bottom: 1rem;
+  background: rgba(255, 255, 255, 0.03);
+  padding: 0.3rem;
+  border-radius: 10px;
+  width: fit-content;
+}
+
+.year-btn {
+  padding: 0.5rem 1.2rem;
+  background: transparent;
+  border: none;
+  border-radius: 7px;
+  color: #888;
+  font-size: 0.85rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.25s ease;
+}
+
+.year-btn:hover {
+  background: rgba(255, 255, 255, 0.06);
+  color: #ccc;
+}
+
+.year-btn.active {
+  background: linear-gradient(135deg, rgba(102, 126, 234, 0.25), rgba(118, 75, 162, 0.25));
+  color: #fff;
+  box-shadow: 0 2px 8px rgba(102, 126, 234, 0.15);
+}
+
+.year-loading {
+  padding: 1rem;
+  text-align: center;
+  color: #667eea;
+  font-size: 0.9rem;
+  animation: pulse 1.5s ease-in-out infinite;
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 0.6; }
+  50% { opacity: 1; }
+}
+
+.year-error {
+  padding: 0.75rem 1rem;
+  background: rgba(245, 87, 108, 0.1);
+  border: 1px solid rgba(245, 87, 108, 0.3);
+  border-radius: 8px;
+  color: #f5576c;
+  font-size: 0.85rem;
+  margin-bottom: 1rem;
+}
+
 /* Responsive */
 @media (max-width: 768px) {
   .stats-tabs {
@@ -77,5 +134,16 @@
   .stats-tab {
     padding: 0.5rem 0.75rem;
     font-size: 0.8rem;
+  }
+
+  .year-selector {
+    width: 100%;
+  }
+
+  .year-btn {
+    flex: 1;
+    padding: 0.45rem 0.75rem;
+    font-size: 0.8rem;
+    text-align: center;
   }
 }

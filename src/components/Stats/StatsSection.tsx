@@ -3,6 +3,8 @@ import { StatsDetails } from './StatsDetails'
 import { FranceMap } from '../Map'
 import { ParticipantGraph } from '../Graph'
 import type { Participant } from '../../types'
+import { useMultiYearParticipants, type YearSelection } from '../../hooks/useMultiYearParticipants'
+import { EVENTS } from '../../constants'
 import './StatsSection.css'
 
 interface StatsSectionProps {
@@ -14,6 +16,11 @@ interface StatsSectionProps {
 
 type TabType = 'stats' | 'map' | 'graph'
 
+const YEAR_OPTIONS: { value: YearSelection; label: string }[] = [
+  ...EVENTS.map(e => ({ value: e.year as YearSelection, label: String(e.year) })),
+  { value: 'both', label: 'Comparaison' },
+]
+
 export const StatsSection = ({
   statsByDepartment,
   statsByAge,
@@ -21,6 +28,15 @@ export const StatsSection = ({
   participants
 }: StatsSectionProps) => {
   const [activeTab, setActiveTab] = useState<TabType>('stats')
+  const { selectedYear, selectYear, dataByYear } = useMultiYearParticipants()
+
+  const isLoading = selectedYear === 'both'
+    ? EVENTS.some(e => dataByYear[e.year]?.loading)
+    : dataByYear[selectedYear as number]?.loading
+
+  const yearError = selectedYear === 'both'
+    ? EVENTS.map(e => dataByYear[e.year]?.error).find(Boolean) || null
+    : dataByYear[selectedYear as number]?.error || null
 
   return (
     <div className="stats-section-container">
@@ -57,7 +73,34 @@ export const StatsSection = ({
           <FranceMap participants={participants} />
         )}
         {activeTab === 'graph' && (
-          <ParticipantGraph participants={participants} />
+          <>
+            <div className="year-selector">
+              {YEAR_OPTIONS.map(opt => (
+                <button
+                  key={opt.value}
+                  className={`year-btn ${selectedYear === opt.value ? 'active' : ''}`}
+                  onClick={() => selectYear(opt.value)}
+                >
+                  {opt.label}
+                </button>
+              ))}
+            </div>
+            {isLoading && (
+              <div className="year-loading">
+                Chargement des données...
+              </div>
+            )}
+            {yearError && (
+              <div className="year-error">
+                {yearError}
+              </div>
+            )}
+            <ParticipantGraph
+              participants={participants}
+              selectedYear={selectedYear}
+              dataByYear={dataByYear}
+            />
+          </>
         )}
       </div>
     </div>

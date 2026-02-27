@@ -10,7 +10,7 @@ const db = admin.firestore();
 // Configuration Weezevent (à mettre dans Firebase Config en prod)
 const WEEZEVENT_CONFIG = {
   API_KEY: 'e9eb1511be05dd576bc2eeb3562905b8',
-  USERNAME: 'billeterie@pakafestival.fr',
+  USERNAME: 'billetterie@pakafestival.fr',
   PASSWORD: 'rvJz3Nbyk4HDsK5',
   EVENT_ID: '1364696'
 };
@@ -49,7 +49,7 @@ interface ParticipantResponse {
   counter_total: number;
 }
 
-// Authentification Weezevent
+// Authentification Weezevent  zef
 async function authenticate(): Promise<string> {
   const formData = new URLSearchParams();
   formData.append('username', WEEZEVENT_CONFIG.USERNAME);
@@ -59,6 +59,7 @@ async function authenticate(): Promise<string> {
   const response = await fetch('https://api.weezevent.com/auth/access_token', {
     method: 'POST',
     headers: {
+
       'Content-Type': 'application/x-www-form-urlencoded',
     },
     body: formData.toString(),
@@ -72,10 +73,10 @@ async function authenticate(): Promise<string> {
   return data.accessToken;
 }
 
-// Récupérer les participants
-async function fetchParticipants(token: string): Promise<ParticipantResponse> {
-  const url = `https://api.weezevent.com/participant/list?api_key=${WEEZEVENT_CONFIG.API_KEY}&access_token=${token}&id_event[]=${WEEZEVENT_CONFIG.EVENT_ID}&full=1`;
-  
+// Récupérer les participants pour un événement donné
+async function fetchParticipants(token: string, eventId: string = WEEZEVENT_CONFIG.EVENT_ID): Promise<ParticipantResponse> {
+  const url = `https://api.weezevent.com/participant/list?api_key=${WEEZEVENT_CONFIG.API_KEY}&access_token=${token}&id_event[]=${eventId}&full=1`;
+
   const response = await fetch(url);
 
   if (!response.ok) {
@@ -86,16 +87,16 @@ async function fetchParticipants(token: string): Promise<ParticipantResponse> {
 }
 
 // Fonction principale de sync
-async function syncWeezeventData() {
-  console.log('🚀 Starting Weezevent sync...');
-  
+async function syncWeezeventData(eventId: string = WEEZEVENT_CONFIG.EVENT_ID) {
+  console.log(`🚀 Starting Weezevent sync for event ${eventId}...`);
+
   try {
     // 1. Authentification
     const token = await authenticate();
     console.log('✅ Authenticated');
 
     // 2. Récupérer les participants
-    const data = await fetchParticipants(token);
+    const data = await fetchParticipants(token, eventId);
     console.log(`📊 Fetched ${data.participants?.length || 0} participants`);
 
     // 3. Stocker dans Firestore
@@ -116,6 +117,10 @@ async function syncWeezeventData() {
     await db.collection('weezevent_snapshots').doc('latest').set(snapshot);
     console.log('✅ Latest snapshot updated');
 
+    // 5. Also save to event-specific document
+    await db.collection('weezevent_snapshots').doc(`event_${eventId}`).set(snapshot);
+    console.log(`✅ Event ${eventId} snapshot updated`);
+
     return { success: true, count: data.participants?.length || 0 };
   } catch (error) {
     console.error('❌ Sync error:', error);
@@ -125,7 +130,7 @@ async function syncWeezeventData() {
 
 // Cloud Function schedulée (2nd Gen) - tous les jours à 6h du matin (heure de Paris)
 export const dailyWeezeventSync = onSchedule({
-  schedule: '0 6 * * *',
+  schedule: '0 7 * * *',
   timeZone: 'Europe/Paris',
   region: 'europe-west1',
 }, async () => {
@@ -133,9 +138,13 @@ export const dailyWeezeventSync = onSchedule({
 });
 
 // Cloud Function HTTP (2nd Gen) pour sync manuel
+// POST / → sync l'événement courant (2026)
+// POST avec { event_id, cache_only } → fetch + cache un événement passé (ne re-fetch pas si déjà en cache)
 export const manualWeezeventSync = onRequest({
   region: 'europe-west1',
   cors: true,
+  memory: '1GiB',
+  timeoutSeconds: 120,
 }, async (req, res) => {
   if (req.method !== 'POST') {
     res.status(405).send('Method not allowed');
@@ -143,7 +152,53 @@ export const manualWeezeventSync = onRequest({
   }
 
   try {
-    const result = await syncWeezeventData();
+    const eventId = req.body?.event_id || WEEZEVENT_CONFIG.EVENT_ID;
+    const cacheOnly = req.body?.cache_only === true;
+
+    // cache_only mode: check Firestore first, only fetch if missing
+    if (cacheOnly) {
+      const docRef = db.collection('weezevent_snapshots').doc(`event_${eventId}`);
+      const docSnap = await docRef.get();
+
+      if (docSnap.exists) {
+        const data = docSnap.data();
+        res.json({ cached: true, count: data?.totalParticipants || data?.participants?.length || 0 });
+        return;
+      }
+
+      // Not cached — fetch from API and store as chunks
+      const token = await authenticate();
+      const data = await fetchParticipants(token, eventId);
+      const participants = data.participants || [];
+
+      const CHUNK_SIZE = 400;
+      const chunkCount = Math.ceil(participants.length / CHUNK_SIZE);
+
+      // Write metadata document (no participants array — stays under 1MB)
+      await docRef.set({
+        serverTime: data.server_time,
+        counter: data.counter,
+        counterDeleted: data.counter_deleted,
+        counterTotal: data.counter_total,
+        totalParticipants: participants.length,
+        chunkCount,
+        syncedAt: admin.firestore.FieldValue.serverTimestamp(),
+        syncedAtISO: new Date().toISOString()
+      });
+
+      // Write participant chunks to subcollection
+      for (let i = 0; i < chunkCount; i++) {
+        const chunk = participants.slice(i * CHUNK_SIZE, (i + 1) * CHUNK_SIZE);
+        await docRef.collection('chunks').doc(String(i)).set({ participants: chunk });
+      }
+
+      console.log(`✅ Event ${eventId} cached in ${chunkCount} chunks (${participants.length} participants)`);
+      res.json({ cached: false, count: participants.length });
+      return;
+    }
+
+    // Normal sync (existing behavior)
+    const result = await syncWeezeventData(eventId);
     res.json(result);
   } catch (error) {
     res.status(500).json({ error: String(error) });

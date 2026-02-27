@@ -114,6 +114,49 @@
   font-size: 0.85rem;
 }
 
+/* Period selector */
+.period-selector {
+  display: flex;
+  gap: 0.25rem;
+  margin-bottom: 1rem;
+  background: rgba(255, 255, 255, 0.03);
+  padding: 0.3rem;
+  border-radius: 8px;
+  width: fit-content;
+}
+
+.period-btn {
+  padding: 0.4rem 1rem;
+  background: transparent;
+  border: none;
+  border-radius: 6px;
+  color: #888;
+  font-size: 0.8rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.25s ease;
+}
+
+.period-btn:hover {
+  background: rgba(255, 255, 255, 0.06);
+  color: #ccc;
+}
+
+.period-btn.active {
+  background: rgba(102, 126, 234, 0.2);
+  color: #667eea;
+}
+
+/* Brush styling */
+.recharts-brush-slide {
+  fill: rgba(102, 126, 234, 0.15);
+}
+
+.recharts-brush-traveller rect {
+  fill: #667eea;
+  rx: 3;
+}
+
 .graph-container {
   min-height: 400px;
 }
@@ -261,6 +304,16 @@
 .event-tag button:hover {
   background: rgba(245, 87, 108, 0.3);
   color: #f5576c;
+}
+
+/* Comparison stats bar */
+.comparison-stats-bar {
+  display: flex;
+  gap: 1.5rem;
+}
+
+.comparison-stats-bar .year-count {
+  font-weight: 600;
 }
 
 /* Responsive */

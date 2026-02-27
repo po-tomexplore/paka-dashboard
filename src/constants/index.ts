@@ -3,6 +3,13 @@ export const USERNAME = 'billeterie@pakafestival.fr'
 export const PASSWORD = 'rvJz3Nbyk4HDsK5'
 export const EVENT_ID = '1364696'
 
+export const EVENTS = [
+  { id: '1247391', year: 2025 },
+  { id: '1364696', year: 2026 },
+] as const
+
+export type EventYear = typeof EVENTS[number]['year']
+
 export const AGE_RANGES = [
   { label: 'Tous', min: 0, max: 999 },
   { label: '0-3 ans', min: 0, max: 3 },

@@ -63,6 +63,65 @@ export const triggerManualSnapshot = async (): Promise<{ success: boolean; count
   return await response.json()
 }
 
+// Fetch participants for a specific event from Firestore (supports chunked storage)
+export const fetchEventParticipants = async (eventId: string): Promise<(ParticipantResponse & { syncedAt: string }) | null> => {
+  const docRef = doc(db, 'weezevent_snapshots', `event_${eventId}`)
+  const docSnap = await getDoc(docRef)
+
+  if (!docSnap.exists()) {
+    return null
+  }
+
+  const data = docSnap.data()
+
+  // Chunked storage: read participants from subcollection
+  if (data.chunkCount) {
+    const chunksRef = collection(db, 'weezevent_snapshots', `event_${eventId}`, 'chunks')
+    const chunksSnap = await getDocs(chunksRef)
+    const allParticipants: Participant[] = []
+    chunksSnap.docs
+      .sort((a, b) => Number(a.id) - Number(b.id))
+      .forEach(d => allParticipants.push(...d.data().participants))
+
+    return {
+      participants: allParticipants,
+      server_time: data.serverTime,
+      counter: data.counter,
+      counter_deleted: data.counterDeleted,
+      counter_total: data.counterTotal,
+      syncedAt: data.syncedAtISO
+    }
+  }
+
+  // Legacy: single document with participants array
+  return {
+    participants: data.participants || [],
+    server_time: data.serverTime,
+    counter: data.counter,
+    counter_deleted: data.counterDeleted,
+    counter_total: data.counterTotal,
+    syncedAt: data.syncedAtISO
+  }
+}
+
+// Trigger Cloud Function to fetch and cache event data if not already in Firestore
+export const triggerSyncEventIfMissing = async (eventId: string): Promise<{ cached: boolean; count: number }> => {
+  const response = await fetch(MANUAL_SYNC_URL, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify({ event_id: eventId, cache_only: true })
+  })
+
+  if (!response.ok) {
+    const error = await response.text()
+    throw new Error(`Erreur lors du sync de l'événement: ${error}`)
+  }
+
+  return await response.json()
+}
+
 // Types pour les événements du graphique
 export interface GraphEvent {
   id: string

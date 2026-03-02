@@ -229,28 +229,61 @@ export const ParticipantGraph = ({ participants, selectedYear, dataByYear, tarif
   const comparisonEvolutionData = useMemo(() => {
     if (!isComparison) return []
 
-    const yearDataMap: Record<number, ReturnType<typeof buildEvolutionData>> = {}
+    // Festival year: Dec=0, Jan=1, ..., Nov=11 for sorting
+    const festivalSortKey = (mmdd: string) => {
+      const [mm, dd] = mmdd.split('-').map(Number)
+      return (mm === 12 ? 0 : mm) * 100 + dd
+    }
+
+    type DayData = { cumul: number; nouveaux: number }
+    const yearMmDdMap: Record<number, Record<string, DayData>> = {}
+
     for (const event of EVENTS) {
       const yearParticipants = getParticipantsForYear(event.year, dataByYear, participants)
       const filtered = filterParticipants(yearParticipants, { start: '', end: '' }, selectedAgeRange, selectedDepartment, selectedTarif)
-      yearDataMap[event.year] = buildEvolutionData(filtered)
+
+      const byDate: Record<string, number> = {}
+      filtered.forEach(p => {
+        const d = new Date(p.create_date).toISOString().split('T')[0]
+        byDate[d] = (byDate[d] || 0) + 1
+      })
+
+      yearMmDdMap[event.year] = {}
+      const sortedDates = Object.keys(byDate).sort()
+      if (sortedDates.length === 0) continue
+
+      // Walk every day first→last, carrying cumulative, key by MM-DD only
+      let cumul = 0
+      const cursor = new Date(sortedDates[0] + 'T00:00:00')
+      const last = new Date(sortedDates[sortedDates.length - 1] + 'T00:00:00')
+      while (cursor <= last) {
+        const full = cursor.toISOString().split('T')[0]
+        const [, mm, dd] = full.split('-')
+        const mmdd = `${mm}-${dd}`
+        const nouveaux = byDate[full] || 0
+        cumul += nouveaux
+        yearMmDdMap[event.year][mmdd] = { cumul, nouveaux }
+        cursor.setDate(cursor.getDate() + 1)
+      }
     }
 
-    // Normalize to J+N (days since first registration)
-    const maxDays = Math.max(...Object.values(yearDataMap).map(d => d.length))
-    const result: Record<string, string | number>[] = []
-    for (let i = 0; i < maxDays; i++) {
-      const row: Record<string, string | number> = { day: `J+${i}` }
+    // Merge all MM-DD keys, sort in festival-year order (Dec first)
+    const allKeys = new Set<string>()
+    for (const event of EVENTS) Object.keys(yearMmDdMap[event.year]).forEach(k => allKeys.add(k))
+    const sortedKeys = Array.from(allKeys).sort((a, b) => festivalSortKey(a) - festivalSortKey(b))
+
+    return sortedKeys.map(mmdd => {
+      const [mm, dd] = mmdd.split('-')
+      const row: Record<string, string | number> = { date: `${dd}/${mm}`, mmdd }
       for (const event of EVENTS) {
-        const d = yearDataMap[event.year]
-        if (i < d.length) {
-          row[`cumul_${event.year}`] = d[i].cumul
-          row[`nouveaux_${event.year}`] = d[i].nouveaux
+        const data = yearMmDdMap[event.year][mmdd]
+        if (data !== undefined) {
+          row[`cumul_${event.year}`] = data.cumul
+          row[`nouveaux_${event.year}`] = data.nouveaux
         }
       }
-      result.push(row)
-    }
-    return result
+      return row
+    })
   }, [isComparison, dataByYear, participants, selectedAgeRange, selectedDepartment, selectedTarif])
 
   const comparisonAgeData = useMemo(() => {
@@ -528,29 +561,30 @@ export const ParticipantGraph = ({ participants, selectedYear, dataByYear, tarif
           </ResponsiveContainer>
         )}
 
-        {/* ========== COMPARISON: EVOLUTION (J+N aligned) ========== */}
+        {/* ========== COMPARISON: EVOLUTION (real dates) ========== */}
         {chartType === 'evolution' && isComparison && (
           <ResponsiveContainer width="100%" height={400}>
             <LineChart data={comparisonEvolutionData}>
               <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.1)" />
-              <XAxis dataKey="day" stroke="#888" tick={{ fill: '#888', fontSize: 12 }}
-                angle={-45} textAnchor="end" height={60} />
+              <XAxis dataKey="date" stroke="#888" tick={{ fill: '#888', fontSize: 11 }}
+                angle={-45} textAnchor="end" height={60} interval="preserveStartEnd" />
               <YAxis stroke="#888" tick={{ fill: '#888' }} />
               <Tooltip contentStyle={TOOLTIP_STYLE} />
               <Legend />
               {EVENTS.map(event => (
                 <Line key={`cumul_${event.year}`} type="monotone"
                   dataKey={`cumul_${event.year}`} name={`Cumulé ${event.year}`}
-                  stroke={YEAR_COLORS[event.year]} strokeWidth={3} dot={false} activeDot={{ r: 6 }} />
+                  stroke={YEAR_COLORS[event.year]} strokeWidth={3} dot={false} activeDot={{ r: 6 }}
+                  connectNulls={false} />
               ))}
               {EVENTS.map(event => (
                 <Line key={`nouveaux_${event.year}`} type="monotone"
                   dataKey={`nouveaux_${event.year}`} name={`Nouveaux/jour ${event.year}`}
                   stroke={YEAR_COLORS[event.year]} strokeWidth={1.5} dot={false}
-                  strokeDasharray="5 5" opacity={0.6} />
+                  strokeDasharray="5 5" opacity={0.6} connectNulls={false} />
               ))}
               <Brush
-                dataKey="day"
+                dataKey="mmdd"
                 height={30}
                 stroke="#667eea"
                 fill="rgba(255,255,255,0.03)"

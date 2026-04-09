@@ -3,7 +3,7 @@ import { useEffect } from 'react'
 function Widget() {
   useEffect(() => {
     const script = document.createElement('script')
-    script.src = 'https://media.tomexplore.com/widget/widget.min.js'
+    script.src = 'https://media.tomexplore.com/widget/widget-1.min.js'
     script.defer = true
     document.body.appendChild(script)
 

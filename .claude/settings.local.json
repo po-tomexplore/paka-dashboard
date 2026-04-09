@@ -1,7 +1,16 @@
 {
   "permissions": {
     "allow": [
-      "WebFetch(domain:api.weezevent.com)"
+      "WebFetch(domain:api.weezevent.com)",
+      "Bash(npx tsc:*)",
+      "Bash(npm run:*)",
+      "Bash(npm install:*)",
+      "Bash(rm:*)",
+      "Bash(firebase deploy:*)",
+      "Bash(git add:*)",
+      "Bash(git commit:*)",
+      "Bash(git push:*)",
+      "Bash(curl:*)"
     ]
   }
 }

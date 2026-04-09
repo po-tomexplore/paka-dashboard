@@ -10,7 +10,7 @@ const db = admin.firestore();
 // Configuration Weezevent (à mettre dans Firebase Config en prod)
 const WEEZEVENT_CONFIG = {
   API_KEY: 'e9eb1511be05dd576bc2eeb3562905b8',
-  USERNAME: 'billetterie@pakafestival.fr',
+  USERNAME: 'billeterie@pakafestival.fr',
   PASSWORD: 'rvJz3Nbyk4HDsK5',
   EVENT_ID: '1364696'
 };
